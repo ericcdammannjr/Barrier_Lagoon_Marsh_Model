@@ -45,6 +45,10 @@ x = 10
 Dmax = 0.7167*r-0.0483
 AA = 0.25*(Dmax-Dmin)^2
 
+# Carbon Storage Parameters
+
+
+
 # Barrier Intital Conditions
 
 α0 = αe
@@ -76,28 +80,28 @@ t = t0:dt:tmax
 
 # Array Preallocation
 
-α = zeros(1,n+1); α[1,1] = α0; 
-W = zeros(1,n+1); W[1,1] = W0; 
-H = zeros(1,n+1); H[1,1] = H0; Hdot = zeros(1,n)
-xt = zeros(1,n+1); xt[1,1] = xt0; xtdot = zeros(1,n)
-xs = zeros(1,n+1); xs[1,1] = xs0; xsdot = zeros(1,n)
-xb = zeros(1,n+1); xb[1,1] = xb0; xbdot = zeros(1,n)
-Z = zeros(1,n+1); Z[1,1] = Z0
-bbm = zeros(1,n+1); bbm[1,1] = bbm0
-bL = zeros(1,n+1); bL[1,1] = bL0
-bim = zeros(1,n+1); bim[1,1] = bim0
-zm = zeros(1,n+1); zm[1,1] = zm0; zmdot = zeros(1,n)
-zL = zeros(1,n+1); zL[1,1] = zL0; zLdot = zeros(1,n)
-xbm = zeros(1,n+1); xbm[1,1] = xbm0; xbmdot = zeros(1,n)
-xim = zeros(1,n+1); xim[1,1] = xim0; ximdot = zeros(1,n)
-xmm = zeros(1,n+1); xmm[1,1] = xmm0; xmmdot = zeros(1,n)
-Qsf = zeros(1,n)
-Qow_H = zeros(1,n)
-Qow_Bl = zeros(1,n)
-Qow_Bm = zeros(1,n)
-Fc = zeros(1,n)
-Fm = zeros(1,n)
-O = zeros(1,n)
+α = zeros(n+1); α[1] = α0; 
+W = zeros(n+1); W[1] = W0; 
+H = zeros(n+1); H[1] = H0; Hdot = zeros(n)
+xt = zeros(n+1); xt[1] = xt0; xtdot = zeros(n)
+xs = zeros(n+1); xs[1] = xs0; xsdot = zeros(n)
+xb = zeros(n+1); xb[1] = xb0; xbdot = zeros(n)
+Z = zeros(n+1); Z[1] = Z0
+bbm = zeros(n+1); bbm[1] = bbm0
+bL = zeros(n+1); bL[1] = bL0
+bim = zeros(n+1); bim[1] = bim0
+zm = zeros(n+1); zm[1] = zm0; zmdot = zeros(n)
+zL = zeros(n+1); zL[1] = zL0; zLdot = zeros(n)
+xbm = zeros(n+1); xbm[1] = xbm0; xbmdot = zeros(n)
+xim = zeros(n+1); xim[1] = xim0; ximdot = zeros(n)
+xmm = zeros(n+1); xmm[1] = xmm0; xmmdot = zeros(n)
+Qsf = zeros(n)
+Qow_H = zeros(n)
+Qow_Bl = zeros(n)
+Qow_Bm = zeros(n)
+Fc = zeros(n)
+Fm = zeros(n)
+O = zeros(n)
 
 # Main Code
 
@@ -105,52 +109,52 @@ for i in 1:n
 
     # Deficit Volume Calculations 
 
-    ϕ = min(1,bbm[1,i]/bbmc)
-    Vd_B = max(0,(We-W[1,i])*(H[1,i]+ϕ*(zm[1,i]-r/2)+(1-ϕ)*(zL[1,i]-r/2)))
-    Vd_H = max(0,(He-H[1,i])*(W[1,i]))
+    ϕ = min(1,bbm[i]/bbmc)
+    Vd_B = max(0,(We-W[i])*(H[i]+ϕ*(zm[i]-r/2)+(1-ϕ)*(zL[i]-r/2)))
+    Vd_H = max(0,(He-H[i])*(W[i]))
     Vd = Vd_B+Vd_H
 
     # Overwash Calculations
 
-    Qsf[1,i] = K*(αe-α[1,i])
+    Qsf[i] = K*(αe-α[i])
 
     if Vd<Vd_max
 
-        Qow_H[1,i] = Qow_max*Vd_H/Vd_max
+        Qow_H[i] = Qow_max*Vd_H/Vd_max
         Qow_B = Qow_max*Vd_B/Vd_max
 
     else 
 
-        Qow_H[1,i] = Qow_max*Vd_H/Vd
+        Qow_H[i] = Qow_max*Vd_H/Vd
         Qow_B = Qow_max*Vd_B/Vd
 
     end
 
-    Qow = Qow_H[1,i]+Qow_B
-    Qow_Bl[1,i] = (1-ϕ)*Qow_B
-    Qow_Bm[1,i] = ϕ*Qow_B
+    Qow = Qow_H[i]+Qow_B
+    Qow_Bl[i] = (1-ϕ)*Qow_B
+    Qow_Bm[i] = ϕ*Qow_B
 
     # Barrier Equations
 
-    xtdot[1,i] = 4*Qsf[1,i]*((H[1,i]+Dt)/(Dt*(2*H[1,i]+Dt)))+2*zdot/α[1,i]
-    xsdot[1,i] = 2*Qow/(2*H[1,i]+Dt)-4*Qsf[1,i]*((H[1,i]+Dt)/(2*H[1,i]+Dt)^2)
-    xbdot[1,i] = Qow_Bm[1,i] /(H[1,i]+zm[1,i]-r/2)
-    Hdot[1,i] = Qow_H[1,i]/W[1,i]-zdot
+    xtdot[i] = 4*Qsf[i]*((H[i]+Dt)/(Dt*(2*H[i]+Dt)))+2*zdot/α[i]
+    xsdot[i] = 2*Qow/(2*H[i]+Dt)-4*Qsf[i]*((H[i]+Dt)/(2*H[i]+Dt)^2)
+    xbdot[i] = Qow_Bm[i] /(H[i]+zm[i]-r/2)
+    Hdot[i] = Qow_H[i]/W[i]-zdot
 
     # Marsh-Lagoon Dynamics
 
     # Lagoon 
 
-    ZL = (zL[1,i]+(zL[1,i]-min(r,zL[1,i])))/2
-    τL = lagoon_bed_shear_stress(bL[1,i],ZL,g,ko,U)
+    ZL = (zL[i]+(zL[i]-min(r,zL[i])))/2
+    τL = lagoon_bed_shear_stress(bL[i],ZL,g,ko,U)
     SL = max((τL-τcr)/τcr,0)
     Cr = ρ*λ*SL/(1+SL*λ)
-    Fc[1,i] = (Cr-Co)*min(r,zL[1,i])/P/ρ
+    Fc[i] = (Cr-Co)*min(r,zL[i])/P/ρ
 
     # Marshes
 
-    Zm = (zm[1,i]+(zm[1,i]-min(r,zm[1,i])))/2
-    B = Bpeak*(Dmax-zm[1,i])*(zm[1,i]-Dmin)/AA
+    Zm = (zm[i]+(zm[i]-min(r,zm[i])))/2
+    B = Bpeak*(Dmax-zm[i])*(zm[i]-Dmin)/AA
 
     if B <= 1*ℯ^-3
 
@@ -161,7 +165,7 @@ for i in 1:n
     Bfrac = B/Bpeak
     AMC = 180*νGp*B
     Rref = AMC*χref
-    O[1,i] = 1/por*(Rref/ρo)
+    O[i] = 1/por*(Rref/ρo)
 
     if Zm > 1*ℯ^-4
 
@@ -175,76 +179,76 @@ for i in 1:n
 
     Sm = max((τm-τcr)/τcr,0)
     Cm = ρ*λ*Sm/(1+Sm*λ)
-    Fm[1,i] = (Cr-Cm)*min(r,zm[1,i])/P/ρ
+    Fm[i] = (Cr-Cm)*min(r,zm[i])/P/ρ
 
     # Marsh-Lagoon Edges
 
-    zs = zm[1,i]+(zL[1,i]-zm[1,i])*(1-exp(-x*0.1/zL[1,i]))
+    zs = zm[i]+(zL[i]-zm[i])*(1-exp(-x*0.1/zL[i]))
     Zs = (zs+(zs-min(r,zs)))/2
-    WP = wave_power(bL[1,i],Zs,g,U)
-    E = ke*WP/(zs-zm[1,i])-ka*Cr*ws/ρ
+    WP = wave_power(bL[i],Zs,g,U)
+    E = ke*WP/(zs-zm[i])-ka*Cr*ws/ρ
    
     # Moving Boundaries
     
-    zmdot[1,i] = -Fm[1,i]-O[1,i]+zdot
-    zLdot[1,i] = -2*E*(zL[1,i]-zm[1,i])/bL[1,i]+Fm[1,i]*(bbm[1,i]+bim[1,i])/bL[1,i]+Fc[1,i]+zdot
-    xbmdot[1,i] = -E+Qow_Bl[1,i] /(zL[1,i]-zm[1,i])
-    ximdot[1,i] = E
-    xmmdot[1,i] = (zdot-zmdot[1,i])/β
+    zmdot[i] = -Fm[i]-O[i]+zdot
+    zLdot[i] = -2*E*(zL[i]-zm[i])/bL[i]+Fm[i]*(bbm[i]+bim[i])/bL[i]+Fc[i]+zdot
+    xbmdot[i] = -E+Qow_Bl[i] /(zL[i]-zm[i])
+    ximdot[i] = E
+    xmmdot[i] = (zdot-zmdot[i])/β
 
     # Foward Euler Method Implementation
 
-    xt[1,i+1] = xt[1,i]+dt*xtdot[1,i]
-    xs[1,i+1] = xs[1,i]+dt*xsdot[1,i]
-    xb[1,i+1] = xb[1,i]+dt*xbdot[1,i]
-    H[1,i+1] = H[1,i]+dt*Hdot[1,i]
-    Z[1,i+1] = Z[1,i]+dt*zdot
-    zm[1,i+1] = zm[1,i]+dt*zmdot[1,i]
-    zL[1,i+1] = zL[1,i]+dt*zLdot[1,i]
-    xbm[1,i+1] = xbm[1,i]+dt*xbmdot[1,i]
-    xim[1,i+1] = xim[1,i]+dt*ximdot[1,i]
-    xmm[1,i+1] = xmm[1,i]+dt*xmmdot[1,i]
+    xt[i+1] = xt[i]+dt*xtdot[i]
+    xs[i+1] = xs[i]+dt*xsdot[i]
+    xb[i+1] = xb[i]+dt*xbdot[i]
+    H[i+1] = H[i]+dt*Hdot[i]
+    Z[i+1] = Z[i]+dt*zdot
+    zm[i+1] = zm[i]+dt*zmdot[i]
+    zL[i+1] = zL[i]+dt*zLdot[i]
+    xbm[i+1] = xbm[i]+dt*xbmdot[i]
+    xim[i+1] = xim[i]+dt*ximdot[i]
+    xmm[i+1] = xmm[i]+dt*xmmdot[i]
     
     # Check for Complete Marsh Erosion
 
-    if xbm[1,i+1] <= xb[1,i+1]
+    if xbm[i+1] <= xb[i+1]
 
-        xbm[1,i+1] = xb[1,i+1]
+        xbm[i+1] = xb[i+1]
 
     end
 
-    if xmm[1,i+1] <= xim[1,i+1]
+    if xmm[i+1] <= xim[i+1]
 
-        xim[1,i+1] = xmm[1,i+1]
+        xim[i+1] = xmm[i+1]
 
     end
 
     # Check for Drowning or Marsh Filling
 
-    if zm[1,i+1] > Dmax
+    if zm[i+1] > Dmax
 
         break
 
     end
 
-    if zL[1,i+1] <= zm[1,i+1]
+    if zL[i+1] <= zm[i+1]
 
-        xbm[1,i+1] = xb[1,i+1]
-        xim[1,i+1] = xmm[1,i+1]
+        xbm[i+1] = xb[i+1]
+        xim[i+1] = xmm[i+1]
 
     end
 
     # Updating Additional Values
     
-    α[1,i+1] = Dt/(xs[1,i+1]-xt[1,i+1])
-    W[1,i+1] = xb[1,i+1]-xs[1,i+1]
-    bbm[1,i+1] = xbm[1,i+1]-xb[1,i+1]
-    bL[1,i+1] = xim[1,i+1]-xbm[1,i+1]
-    bim[1,i+1] = xmm[1,i+1]-xim[1,i+1]
+    α[i+1] = Dt/(xs[i+1]-xt[i+1])
+    W[i+1] = xb[i+1]-xs[i+1]
+    bbm[i+1] = xbm[i+1]-xb[i+1]
+    bL[i+1] = xim[i+1]-xbm[i+1]
+    bim[i+1] = xmm[i+1]-xim[i+1]
 
 end
 
-plot(t,[bbm[1,:] bL[1,:]/10^3 W[1,:] zL[1,:]], 
+plot(t,[bbm[:] bL[:]/10^3 W[:] zL[:]], 
 
     layout = (2,2),
     size = [1200 800],
