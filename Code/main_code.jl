@@ -45,10 +45,6 @@ x = 10
 Dmax = 0.7167*r-0.0483
 AA = 0.25*(Dmax-Dmin)^2
 
-# Carbon Storage Parameters
-
-
-
 # Barrier Intital Conditions
 
 α0 = αe
@@ -70,10 +66,26 @@ xbm0 = xb0+bbm0
 xim0 = xb0+bbm0+bL0
 xmm0 = xb0+bbm0+bL0+bim0-(zm0-r/2)/β
 
+# Carbon Storage
+
+OF = 0.5
+Torg0 = OF*(zL0-zm0)
+S0 = (bbm0+bim0)*Torg0*ρo*por
+zS = 2
+
+# Marsh Restoration
+
+mrbm = 0.0
+mrim = 0.0
+
+# Beach Nourishment 
+
+bn = 0.0
+
 # Computational Parameters
 
 t0 = 0
-tmax = 1000
+tmax = 100
 n = 100000
 dt = (tmax-t0)/n
 t = t0:dt:tmax
@@ -137,7 +149,7 @@ for i in 1:n
     # Barrier Equations
 
     xtdot[i] = 4*Qsf[i]*((H[i]+Dt)/(Dt*(2*H[i]+Dt)))+2*zdot/α[i]
-    xsdot[i] = 2*Qow/(2*H[i]+Dt)-4*Qsf[i]*((H[i]+Dt)/(2*H[i]+Dt)^2)
+    xsdot[i] = (2*Qow/(2*H[i]+Dt)-4*Qsf[i]*((H[i]+Dt)/(2*H[i]+Dt)^2))-bn
     xbdot[i] = Qow_Bm[i] /(H[i]+zm[i]-r/2)
     Hdot[i] = Qow_H[i]/W[i]-zdot
 
@@ -192,8 +204,8 @@ for i in 1:n
     
     zmdot[i] = -Fm[i]-O[i]+zdot
     zLdot[i] = -2*E*(zL[i]-zm[i])/bL[i]+Fm[i]*(bbm[i]+bim[i])/bL[i]+Fc[i]+zdot
-    xbmdot[i] = -E+Qow_Bl[i] /(zL[i]-zm[i])
-    ximdot[i] = E
+    xbmdot[i] = -E+Qow_Bl[i]/(zL[i]-zm[i])+mrbm
+    ximdot[i] = E-mrim
     xmmdot[i] = (zdot-zmdot[i])/β
 
     # Foward Euler Method Implementation
@@ -248,16 +260,69 @@ for i in 1:n
 
 end
 
-plot(t,[bbm[:] bL[:]/10^3 W[:] zL[:]], 
+# Carbon Storage Calculation
 
-    layout = (2,2),
-    size = [1200 800],
+Org = O[:].*dt
+prepend!(Org,Torg0)
+Torg = cumsum(Org)
+S = ((bbm.+bim).*Torg.*ρo.*por.+(W.*ρo.*zS))/10^6
+
+# Plotting Results
+
+prepend!(xsdot,xsdot[1])
+
+p1 = plot(t,[bbm[:] bim[:]],
+
     grid = false,
-    legend = false,
-    title = ["Backbarrier Marsh Width (bbm)" "Lagoon Width (bL)" "Barrier Width (W)" "Lagoon Depth (zL)"],
+    label = ["bbm" "bim"],
+    title = "Marsh Width",
     xlabel = "Time (yrs)",
-    ylabel = ["bbm (m)" "bl (km)" "W (m)" "zL (m)"],
+    ylabel = "Width (m)",
+    lw = 3,
+    lc = :blue,
+    ls = [:solid :dot]
+
+)
+
+p2 = plot(t,S[:],
+
+    grid = false,
+    label = false,
+    title = "Carbon Storage",
+    xlabel = "Time (yrs)",
+    ylabel = "Storage (10^3 tons/m)",
+    lw = 3,
+    lc = :green
+
+)
+
+p3 = plot(t,xsdot[:],
+
+    grid = false,
+    label = false,
+    title = "Shoreline Retreat Rate",
+    xlabel = "Time (yrs)",
+    ylabel = "Rate (m/yr)",
+    lw = 3,
+    lc = :red
+
+)
+
+p4 = plot(t,W[:],
+
+    grid = false,
+    label = false,
+    title = "Barrier Width",
+    xlabel = "Time (yrs)",
+    ylabel = "Width (m)", 
     lw = 3,
     lc = :black
-    
+
+)
+
+plot(p1, p2, p3, p4,
+
+    layout=(2,2),
+    size = [1200 800]
+
 )
